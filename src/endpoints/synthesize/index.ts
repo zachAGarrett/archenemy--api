@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import syntheticSample from "../../lib/syntheticSample/index.js";
 import { SyntheticSampleProps } from "../../lib/syntheticSample/src/types.js";
+import profileSample from "../../lib/profileSample.js";
 
 export default async function synthesize(req: Request, res: Response) {
   const payload: SyntheticSampleProps = req.body;
@@ -10,12 +11,11 @@ export default async function synthesize(req: Request, res: Response) {
   // Handle the payload and create a synthetic sample
 
   const sample = await syntheticSample(payload);
-
-  console.log(sample);
+  const profile = profileSample(sample);
 
   const response = {
     message: "Synthetic sample created successfully",
-    payload: sample,
+    payload: { sample, profile },
   };
 
   res.json(response);
