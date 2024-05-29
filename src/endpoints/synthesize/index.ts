@@ -9,7 +9,7 @@ export default async function synthesize(req: Request, res: Response) {
 
   // Handle the payload and create a synthetic sample
 
-  const sample = syntheticSample(payload);
+  const sample = await syntheticSample(payload);
 
   console.log(sample);
 
