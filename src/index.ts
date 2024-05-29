@@ -1,10 +1,11 @@
 import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import { SyntheticSampleProps } from "./lib/syntheticSample/src/types.js";
+import syntheticSample from "./lib/syntheticSample/index.js";
 
 const app = express();
 
-const port = process.env.PORT
+const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
@@ -17,10 +18,12 @@ app.post("/synthesize", (req: Request, res: Response) => {
   console.log(payload);
 
   // Handle the payload and create a synthetic sample
-  // This is just a placeholder response
+
+  const sample = syntheticSample(payload);
+
   const response = {
     message: "Synthetic sample created successfully",
-    payload: payload,
+    payload: sample,
   };
 
   res.json(response);
