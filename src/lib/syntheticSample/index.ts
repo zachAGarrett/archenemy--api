@@ -1,8 +1,8 @@
 import { std, mean } from "mathjs";
 import crypto from "node:crypto";
-import { SyntheticSampleProps } from "./src/types.js";
-import scaleValue from "./src/scaleValue.js";
-import acceptOrResample from "./src/acceptOrResample.js";
+import { Summary, SyntheticSampleProps, TargetConfig } from "./src/types.js";
+import shouldAcceptOutlier from "./src/shouldAcceptOutlier.js";
+import randomValue from "./src/randomValue.js";
 
 export default async function syntheticSample({
   sampleSummary,
@@ -10,20 +10,24 @@ export default async function syntheticSample({
   config = { min: 0, max: 10 },
 }: SyntheticSampleProps) {
   // Generate an array of cryptographically random values of the size specified
-  const randomArray = new Uint32Array(size);
-  crypto.randomFillSync(randomArray);
+  const syntheticSample = new Uint32Array(size);
+  crypto.randomFillSync(syntheticSample);
 
   // Evaluate the standard deviation and mean of the generated random values
-  const randomArraySummary = {
-    std: std(...randomArray),
-    mean: mean(...randomArray),
+  const syntheticSampleSummary = {
+    std: std(...syntheticSample),
+    mean: mean(...syntheticSample),
   };
 
   let acceptedValues: Array<number> = [];
 
-  for (let i = 0; i < randomArray.length; i++) {
-    const n = randomArray[i];
-    const nScaled = scaleValue(n, sampleSummary, randomArraySummary); // Scale n to the sample properties
+  for (let i = 0; i < syntheticSample.length; i++) {
+    const n = syntheticSample[i];
+
+    const nScaled =
+      (syntheticSampleSummary.std * (n - syntheticSampleSummary.mean)) /
+      syntheticSampleSummary.std +
+      syntheticSampleSummary.mean; // Scale n to the sample properties
 
     /**
      * Accept the scaled value of n when it falls inside the target range.
@@ -43,4 +47,18 @@ export default async function syntheticSample({
   }
 
   return acceptedValues;
+}
+
+export async function acceptOrResample(
+  value: number,
+  sampleProfile: Summary,
+  config: TargetConfig
+) {
+  if (shouldAcceptOutlier(value, sampleProfile, config)) {
+    return value;
+  } else {
+    let n = randomValue(config.min, config.max);
+
+    return acceptOrResample(n, sampleProfile, config);
+  }
 }
