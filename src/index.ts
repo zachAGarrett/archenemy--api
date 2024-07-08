@@ -9,7 +9,7 @@ import neo4j from "neo4j-driver";
 import resolvers from "./resolvers/index.js";
 
 configDotenv();
-const { NEOURI, NEOUSER, NEOPASS } = process.env;
+const { NEOURI, NEOUSER, NEOPASS, PORT } = process.env;
 
 const typesArray = loadFilesSync(path.join("./graph/", "*.graphql"));
 const typeDefs = mergeTypeDefs(typesArray);
@@ -48,6 +48,8 @@ if (NEOURI === undefined || NEOUSER === undefined || NEOPASS === undefined) {
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
-  const { url } = await startStandaloneServer(server);
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: PORT ? Number(PORT) : 4000 },
+  });
   console.log(`🚀  Server ready at ${url}`);
 }
