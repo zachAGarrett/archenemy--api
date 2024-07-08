@@ -1,0 +1,135 @@
+# schema.graphql
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+
+type Summary {
+  std: Float!
+  mean: Float!
+  min: Float!
+  max: Float!
+}
+
+type TargetConfig {
+  min: Float!
+  max: Float!
+}
+
+input SummaryInput {
+  std: Float!
+  mean: Float!
+  min: Float!
+  max: Float!
+}
+
+input TargetConfigInput {
+  min: Float!
+  max: Float!
+}
+
+input SyntheticSamplePropsInput {
+  sampleSummary: SummaryInput!
+  size: Int!
+  config: TargetConfigInput!
+}
+
+type Authenticates @relationshipProperties {
+  id: String!
+}
+
+type User {
+  id: ID! @id
+  authenicator: Authenicator!
+    @relationship(
+      type: "AUTHENTICATES"
+      properties: "Authenticates"
+      direction: IN
+    )
+  sessions: [Session!]! @relationship(type: "PARTICIPATES_IN", direction: OUT)
+}
+
+type Authenicator {
+  id: ID! @id
+  uri: String!
+  users: [User!]!
+    @relationship(
+      type: "AUTHENTICATES"
+      properties: "Authenticates"
+      direction: OUT
+    )
+}
+
+type SyntheticSampleResponse {
+  message: String!
+  sample: [Float!]!
+  profile: Summary!
+}
+
+type Bow {
+  id: ID! @id
+  model: String!
+  brand: String!
+  owner: User! @relationship(type: "OWNS", direction: IN)
+}
+
+type Location {
+  id: ID! @id
+  name: String!
+  address: String!
+  targets: [Target!]! @relationship(type: "HAS_TARGET", direction: OUT)
+  sessions: [Session!]! @relationship(type: "HELD_AT", direction: IN)
+}
+
+type Target {
+  id: ID! @id
+  type: String!
+  distance: Int!
+  location: Location! @relationship(type: "HAS_TARGET", direction: IN)
+  ends: [End!]! @relationship(type: "HAS_END", direction: OUT)
+}
+
+type End {
+  id: ID! @id
+  number: Int!
+  target: Target! @relationship(type: "HAS_END", direction: IN)
+  arrows: [Arrow!]! @relationship(type: "HAS_ARROW", direction: OUT)
+  session: Session! @relationship(type: "PART_OF_SESSION", direction: IN)
+}
+
+type Arrow {
+  id: ID! @id
+  score: Int!
+  position: String!
+  end: End! @relationship(type: "HAS_ARROW", direction: IN)
+  archer: User @relationship(type: "SHOOTS", direction: IN)
+  virtualOpponent: VirtualOpponent @relationship(type: "SHOOTS", direction: IN)
+}
+
+type Session {
+  id: ID! @id
+  date: String!
+  location: Location! @relationship(type: "HELD_AT", direction: OUT)
+  participants: [User!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
+  virtualOpponents: [VirtualOpponent!]!
+    @relationship(type: "PARTICIPATES_IN", direction: IN)
+  ends: [End!]! @relationship(type: "PART_OF_SESSION", direction: OUT)
+}
+
+type VirtualOpponent {
+  id: ID! @id
+  name: String!
+  arrows: [Arrow!]! @relationship(type: "SHOOTS", direction: OUT)
+  sessions: [Session!]! @relationship(type: "PARTICIPATES_IN", direction: OUT)
+  parameters: [ArrowGenerationParameter!]!
+    @relationship(type: "HAS_PARAMETER", direction: OUT)
+}
+
+type ArrowGenerationParameter {
+  parameter: String!
+  value: String!
+  opponent: VirtualOpponent! @relationship(type: "HAS_PARAMETER", direction: IN)
+  session: Session! @relationship(type: "PARAMETERS_FOR", direction: OUT)
+}
+
+type Mutation {
+  synthesize(payload: SyntheticSamplePropsInput!): SyntheticSampleResponse!
+}
