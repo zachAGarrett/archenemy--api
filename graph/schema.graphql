@@ -2,19 +2,7 @@
 extend schema
   @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
 
-type Summary {
-  std: Float!
-  mean: Float!
-  min: Float!
-  max: Float!
-}
-
-type TargetConfig {
-  min: Float!
-  max: Float!
-}
-
-input SummaryInput {
+input SeedInput {
   std: Float!
   mean: Float!
   min: Float!
@@ -27,13 +15,40 @@ input TargetConfigInput {
 }
 
 input SyntheticSamplePropsInput {
-  sampleSummary: SummaryInput!
+  sampleSeed: SeedInput!
   size: Int!
   config: TargetConfigInput!
 }
 
+union Archer = User | VirtualOpponent
+
+type Seed {
+  std: Float!
+  mean: Float!
+  min: Float!
+  max: Float!
+}
+
 type Authenticates @relationshipProperties {
   id: String!
+}
+
+type AtTarget @relationshipProperties {
+  distance: Int!
+}
+
+type VirtualOpponentSession @relationshipProperties {
+  name: String!
+  mod: Float!
+  adaptive: Boolean! @default(value: false)
+  seed: Seed!
+}
+
+type GenerationProperties @relationshipProperties {
+  mean: Float!
+  max: Float!
+  min: Float!
+  std: Float!
 }
 
 type User {
@@ -45,11 +60,12 @@ type User {
       direction: IN
     )
   sessions: [Session!]! @relationship(type: "PARTICIPATES_IN", direction: OUT)
+  bows: [Bow!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 type Authenicator {
   id: ID! @id
-  uri: String!
+  name: String!
   users: [User!]!
     @relationship(
       type: "AUTHENTICATES"
@@ -61,7 +77,7 @@ type Authenicator {
 type SyntheticSampleResponse {
   message: String!
   sample: [Float!]!
-  profile: Summary!
+  seed: Seed!
 }
 
 type Bow {
@@ -71,63 +87,54 @@ type Bow {
   owner: User! @relationship(type: "OWNS", direction: IN)
 }
 
-type Location {
-  id: ID! @id
-  name: String!
-  address: String!
-  targets: [Target!]! @relationship(type: "HAS_TARGET", direction: OUT)
-  sessions: [Session!]! @relationship(type: "HELD_AT", direction: IN)
-}
-
 type Target {
   id: ID! @id
   type: String!
-  distance: Int!
-  location: Location! @relationship(type: "HAS_TARGET", direction: IN)
-  ends: [End!]! @relationship(type: "HAS_END", direction: OUT)
+  rings: Int!
+  size: Int!
+  arrows: [Arrow!]!
+    @relationship(type: "AT", direction: IN, properties: "AtTarget")
 }
 
 type End {
   id: ID! @id
   number: Int!
-  target: Target! @relationship(type: "HAS_END", direction: IN)
-  arrows: [Arrow!]! @relationship(type: "HAS_ARROW", direction: OUT)
-  session: Session! @relationship(type: "PART_OF_SESSION", direction: IN)
+  arrows: [Arrow!]! @relationship(type: "DURING", direction: IN)
+  session: Session! @relationship(type: "DURING", direction: IN)
 }
 
 type Arrow {
   id: ID! @id
-  score: Int!
-  position: String!
-  end: End! @relationship(type: "HAS_ARROW", direction: IN)
-  archer: User @relationship(type: "SHOOTS", direction: IN)
-  virtualOpponent: VirtualOpponent @relationship(type: "SHOOTS", direction: IN)
+  angle: Float
+  offset: Float
+  end: End! @relationship(type: "DURING", direction: OUT)
+  target: Target!
+    @relationship(type: "AT", direction: OUT, properties: "AtTarget")
+  archer: Archer! @relationship(type: "SHOOTS", direction: IN)
 }
 
 type Session {
   id: ID! @id
+  name: String!
   date: String!
-  location: Location! @relationship(type: "HELD_AT", direction: OUT)
-  participants: [User!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
-  virtualOpponents: [VirtualOpponent!]!
-    @relationship(type: "PARTICIPATES_IN", direction: IN)
-  ends: [End!]! @relationship(type: "PART_OF_SESSION", direction: OUT)
+  archers: [Archer!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
+  ends: [End!]! @relationship(type: "DURING", direction: OUT)
 }
 
 type VirtualOpponent {
   id: ID! @id
-  name: String!
-  arrows: [Arrow!]! @relationship(type: "SHOOTS", direction: OUT)
-  sessions: [Session!]! @relationship(type: "PARTICIPATES_IN", direction: OUT)
-  parameters: [ArrowGenerationParameter!]!
-    @relationship(type: "HAS_PARAMETER", direction: OUT)
-}
-
-type ArrowGenerationParameter {
-  parameter: String!
-  value: String!
-  opponent: VirtualOpponent! @relationship(type: "HAS_PARAMETER", direction: IN)
-  session: Session! @relationship(type: "PARAMETERS_FOR", direction: OUT)
+  arrows: [Arrow!]!
+    @relationship(
+      type: "SHOOTS"
+      direction: OUT
+      properties: "GenerationProperties"
+    )
+  sessions: [Session!]!
+    @relationship(
+      type: "PARTICIPATES_IN"
+      direction: OUT
+      properties: "VirtualOpponentSession"
+    )
 }
 
 type Mutation {
