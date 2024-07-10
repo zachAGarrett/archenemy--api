@@ -20,7 +20,23 @@ input SyntheticSamplePropsInput {
   config: TargetConfigInput!
 }
 
-union Archer = User | VirtualOpponent
+union Archer = User | Enemy
+
+enum SessionMode {
+  SUM
+  SET
+}
+
+enum BowType {
+  RECURVE
+  COMPOUND
+  BAREBOW
+}
+
+enum TimerMode {
+  LOOP
+  TOTAL
+}
 
 type Seed {
   std: Float!
@@ -37,7 +53,7 @@ type AtTarget @relationshipProperties {
   distance: Int!
 }
 
-type VirtualOpponentSession @relationshipProperties {
+type EnemySession @relationshipProperties {
   name: String!
   mod: Float!
   adaptive: Boolean! @default(value: false)
@@ -82,6 +98,7 @@ type SyntheticSampleResponse {
 
 type Bow {
   id: ID! @id
+  type: BowType!
   model: String!
   brand: String!
   owner: User! @relationship(type: "OWNS", direction: IN)
@@ -99,6 +116,7 @@ type Target {
 type End {
   id: ID! @id
   number: Int!
+  shootoff: Boolean! @default(value: false)
   arrows: [Arrow!]! @relationship(type: "DURING", direction: IN)
   session: Session! @relationship(type: "DURING", direction: IN)
 }
@@ -113,15 +131,26 @@ type Arrow {
   archer: Archer! @relationship(type: "SHOOTS", direction: IN)
 }
 
+type Ruleset {
+  id: ID! @id
+  arrowsPerEnd: Int!
+  timePerArrow: Int!
+  timer: TimerMode! @default(value: TOTAL)
+  mode: SessionMode! @default(value: SUM)
+  discipline: BowType! @default(value: RECURVE)
+}
+
 type Session {
   id: ID! @id
   name: String!
-  date: String!
+  date: Int!
   archers: [Archer!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
   ends: [End!]! @relationship(type: "DURING", direction: OUT)
+  ruleset: Ruleset! @relationship(type: "USES", direction: OUT)
+  active: Boolean! @default(value: false)
 }
 
-type VirtualOpponent {
+type Enemy {
   id: ID! @id
   arrows: [Arrow!]!
     @relationship(
@@ -133,7 +162,7 @@ type VirtualOpponent {
     @relationship(
       type: "PARTICIPATES_IN"
       direction: OUT
-      properties: "VirtualOpponentSession"
+      properties: "EnemySession"
     )
 }
 
