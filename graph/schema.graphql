@@ -20,8 +20,6 @@ input SyntheticSamplePropsInput {
   config: TargetConfigInput!
 }
 
-union Archer = User | Enemy
-
 enum SessionMode {
   SUM
   SET
@@ -37,6 +35,8 @@ enum TimerMode {
   LOOP
   TOTAL
 }
+
+union Archer = User | Enemy
 
 type Seed {
   std: Float!
@@ -55,7 +55,7 @@ type AtTarget @relationshipProperties {
 
 type EnemySession @relationshipProperties {
   name: String!
-  mod: Float!
+  mod: Float! @default(value: 1)
   adaptive: Boolean! @default(value: false)
   seed: Seed!
 }
@@ -77,6 +77,8 @@ type User {
     )
   sessions: [Session!]! @relationship(type: "PARTICIPATES_IN", direction: OUT)
   bows: [Bow!]! @relationship(type: "OWNS", direction: OUT)
+  arrows: [Arrow!]! @relationship(type: "SHOOTS", direction: OUT)
+  ends: [End!]! @relationship(type: "SHOOTS", direction: OUT)
 }
 
 type Authenicator {
@@ -111,6 +113,7 @@ type Target {
   size: Int!
   arrows: [Arrow!]!
     @relationship(type: "AT", direction: IN, properties: "AtTarget")
+  ends: [End!]! @relationship(type: "AT", direction: IN, properties: "AtTarget")
 }
 
 type End {
@@ -119,6 +122,9 @@ type End {
   shootoff: Boolean! @default(value: false)
   arrows: [Arrow!]! @relationship(type: "DURING", direction: IN)
   session: Session! @relationship(type: "DURING", direction: IN)
+  archer: Archer! @relationship(type: "SHOOTS", direction: IN)
+  target: Target!
+    @relationship(type: "AT", direction: OUT, properties: "AtTarget")
 }
 
 type Arrow {
@@ -144,7 +150,13 @@ type Session {
   id: ID! @id
   name: String!
   date: Int!
-  archers: [Archer!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
+  enemies: [Enemy!]!
+    @relationship(
+      type: "PARTICIPATES_IN"
+      properties: "EnemySession"
+      direction: IN
+    )
+  users: [User!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
   ends: [End!]! @relationship(type: "DURING", direction: OUT)
   ruleset: Ruleset! @relationship(type: "USES", direction: OUT)
   active: Boolean! @default(value: false)
@@ -164,6 +176,7 @@ type Enemy {
       direction: OUT
       properties: "EnemySession"
     )
+  ends: [End!]! @relationship(type: "SHOOTS", direction: OUT)
 }
 
 type Mutation {

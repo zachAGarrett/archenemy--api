@@ -1,7 +1,6 @@
-import { SyntheticSampleProps } from "../../lib/syntheticSample/src/types.js";
-import syntheticSample from "../../lib/syntheticSample/index.js";
-import profileSample from "../../lib/profileSample.js";
-
+import generateSkewSample from "../../lib/stats/generateSkewSample.js";
+import profileSample from "../../lib/stats/profileSample.js";
+import { SyntheticSampleProps } from "../../lib/stats/types.js";
 export default async function synthesize(
   _: any,
   args: { payload: SyntheticSampleProps }
@@ -11,7 +10,7 @@ export default async function synthesize(
   // Validate payload here if needed
 
   // Handle the payload and create a synthetic sample
-  const sample = await syntheticSample(payload);
+  const sample = generateSkewSample(payload.seed, payload.size, false);
   const profile = profileSample(sample);
 
   return {
