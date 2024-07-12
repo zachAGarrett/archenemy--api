@@ -1,5 +1,5 @@
 import { round } from "mathjs";
-import { Ziggurat } from "./ziggurat";
+import { Ziggurat } from "./ziggurat.js";
 
 export default function generateSample(
   { min, mean, max }: { min: number; mean: number; max: number },
