@@ -2,20 +2,16 @@
 extend schema
   @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
 
-input SeedInput {
-  std: Float!
-  mean: Float!
-  min: Float!
-  max: Float!
-}
-
 input TargetConfigInput {
   min: Float!
   max: Float!
 }
 
 input SyntheticSamplePropsInput {
-  sampleSeed: SeedInput!
+  std: Float!
+  mean: Float!
+  min: Float!
+  max: Float!
   size: Int!
   config: TargetConfigInput!
 }
@@ -38,26 +34,12 @@ enum TimerMode {
 
 union Archer = User | Enemy
 
-type Seed {
-  std: Float!
-  mean: Float!
-  min: Float!
-  max: Float!
-}
-
 type Authenticates @relationshipProperties {
   id: String!
 }
 
 type AtTarget @relationshipProperties {
   distance: Int!
-}
-
-type EnemySession @relationshipProperties {
-  name: String!
-  mod: Float! @default(value: 1)
-  adaptive: Boolean! @default(value: false)
-  seed: Seed!
 }
 
 type GenerationProperties @relationshipProperties {
@@ -78,7 +60,7 @@ type User {
   sessions: [Session!]! @relationship(type: "PARTICIPATES_IN", direction: OUT)
   bows: [Bow!]! @relationship(type: "OWNS", direction: OUT)
   arrows: [Arrow!]! @relationship(type: "SHOOTS", direction: OUT)
-  ends: [End!]! @relationship(type: "SHOOTS", direction: OUT)
+  sets: [Set!]! @relationship(type: "SHOOTS", direction: OUT)
 }
 
 type Authenicator {
@@ -95,7 +77,10 @@ type Authenicator {
 type SyntheticSampleResponse {
   message: String!
   sample: [Float!]!
-  seed: Seed!
+  std: Float!
+  mean: Float!
+  min: Float!
+  max: Float!
 }
 
 type Bow {
@@ -110,18 +95,21 @@ type Target {
   id: ID! @id
   type: String!
   rings: Int!
-  size: Int!
+  radius: Int!
+  max: Int!
+  min: Int!
+  xRing: Boolean! @default(value: true)
   arrows: [Arrow!]!
     @relationship(type: "AT", direction: IN, properties: "AtTarget")
-  ends: [End!]! @relationship(type: "AT", direction: IN, properties: "AtTarget")
+  sets: [Set!]! @relationship(type: "AT", direction: IN, properties: "AtTarget")
 }
 
-type End {
+type Set {
   id: ID! @id
   number: Int!
   shootoff: Boolean! @default(value: false)
   arrows: [Arrow!]! @relationship(type: "DURING", direction: IN)
-  session: Session! @relationship(type: "DURING", direction: IN)
+  session: Session! @relationship(type: "DURING", direction: OUT)
   archer: Archer! @relationship(type: "SHOOTS", direction: IN)
   target: Target!
     @relationship(type: "AT", direction: OUT, properties: "AtTarget")
@@ -131,7 +119,9 @@ type Arrow {
   id: ID! @id
   angle: Float
   offset: Float
-  end: End! @relationship(type: "DURING", direction: OUT)
+  coordinate: CartesianPoint
+  value: Int
+  set: Set! @relationship(type: "DURING", direction: OUT)
   target: Target!
     @relationship(type: "AT", direction: OUT, properties: "AtTarget")
   archer: Archer! @relationship(type: "SHOOTS", direction: IN)
@@ -139,7 +129,7 @@ type Arrow {
 
 type Ruleset {
   id: ID! @id
-  arrowsPerEnd: Int!
+  arrowsPerSet: Int!
   timePerArrow: Int!
   timer: TimerMode! @default(value: TOTAL)
   mode: SessionMode! @default(value: SUM)
@@ -150,33 +140,30 @@ type Session {
   id: ID! @id
   name: String!
   date: Int!
-  enemies: [Enemy!]!
-    @relationship(
-      type: "PARTICIPATES_IN"
-      properties: "EnemySession"
-      direction: IN
-    )
+  enemies: [Enemy!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
   users: [User!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
-  ends: [End!]! @relationship(type: "DURING", direction: OUT)
-  ruleset: Ruleset! @relationship(type: "USES", direction: OUT)
+  sets: [Set!]! @relationship(type: "DURING", direction: IN)
+  ruleset: Ruleset @relationship(type: "USES", direction: OUT)
   active: Boolean! @default(value: false)
 }
 
 type Enemy {
   id: ID! @id
+  name: String!
+  mod: Float! @default(value: 1.0)
+  adaptive: Boolean! @default(value: false)
+  std: Float!
+  mean: Float!
+  min: Float!
+  max: Float!
   arrows: [Arrow!]!
     @relationship(
       type: "SHOOTS"
       direction: OUT
       properties: "GenerationProperties"
     )
-  sessions: [Session!]!
-    @relationship(
-      type: "PARTICIPATES_IN"
-      direction: OUT
-      properties: "EnemySession"
-    )
-  ends: [End!]! @relationship(type: "SHOOTS", direction: OUT)
+  sessions: [Session!]! @relationship(type: "PARTICIPATES_IN", direction: OUT)
+  sets: [Set!]! @relationship(type: "SHOOTS", direction: OUT)
 }
 
 type Mutation {
