@@ -168,6 +168,7 @@ type Session {
 type Note {
   id: ID! @id
   title: String!
+  content: String
   date: Int!
   session: Session @relationship(type: "ON", direction: OUT)
   comments: [Comment!]! @relationship(type: "ON", direction: IN)
@@ -179,6 +180,7 @@ type Note {
 type Comment {
   id: ID! @id
   title: String!
+  content: String
   date: Int!
   session: Session @relationship(type: "ON", direction: OUT)
   set: Set @relationship(type: "ON", direction: OUT)
