@@ -89,6 +89,9 @@ type Bow {
   model: String!
   brand: String!
   owner: User! @relationship(type: "OWNS", direction: IN)
+  comments: [Comment!]! @relationship(type: "ON", direction: IN)
+  notes: [Note!]! @relationship(type: "ON", direction: IN)
+  comments: [Comment!]! @relationship(type: "ON", direction: IN)
 }
 
 type Target {
@@ -113,6 +116,8 @@ type Set {
   archer: Archer! @relationship(type: "SHOOTS", direction: IN)
   target: Target!
     @relationship(type: "AT", direction: OUT, properties: "AtTarget")
+  notes: [Note!]! @relationship(type: "ON", direction: IN)
+  comments: [Comment!]! @relationship(type: "ON", direction: IN)
 }
 
 type Arrow {
@@ -125,7 +130,12 @@ type Arrow {
   target: Target!
     @relationship(type: "AT", direction: OUT, properties: "AtTarget")
   archer: Archer! @relationship(type: "SHOOTS", direction: IN)
+  notes: [Note!]! @relationship(type: "ON", direction: IN)
+  comments: [Comment!]! @relationship(type: "ON", direction: IN)
 }
+
+# type Location
+# type Event
 
 type Ruleset {
   id: ID! @id
@@ -144,7 +154,31 @@ type Session {
   users: [User!]! @relationship(type: "PARTICIPATES_IN", direction: IN)
   sets: [Set!]! @relationship(type: "DURING", direction: IN)
   ruleset: Ruleset @relationship(type: "USES", direction: OUT)
+  notes: [Note!]! @relationship(type: "ON", direction: IN)
+  comments: [Comment!]! @relationship(type: "ON", direction: IN)
   active: Boolean! @default(value: false)
+}
+
+type Note {
+  id: ID! @id
+  title: String!
+  date: Int!
+  session: Session @relationship(type: "ON", direction: OUT)
+  comments: [Comment!]! @relationship(type: "ON", direction: IN)
+  set: Set @relationship(type: "ON", direction: OUT)
+  arrow: Arrow @relationship(type: "ON", direction: OUT)
+  bow: Bow @relationship(type: "ON", direction: OUT)
+}
+
+type Comment {
+  id: ID! @id
+  title: String!
+  date: Int!
+  session: Sessions @relationship(type: "ON", direction: OUT)
+  set: Set @relationship(type: "ON", direction: OUT)
+  arrow: Arrow @relationship(type: "ON", direction: OUT)
+  note: Note @relationship(type: "ON", direction: OUT)
+  bow: Bow @relationship(type: "ON", direction: OUT)
 }
 
 type Enemy {
