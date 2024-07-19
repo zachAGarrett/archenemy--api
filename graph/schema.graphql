@@ -89,7 +89,6 @@ type Bow {
   model: String!
   brand: String!
   owner: User! @relationship(type: "OWNS", direction: IN)
-  comments: [Comment!]! @relationship(type: "ON", direction: IN)
   notes: [Note!]! @relationship(type: "ON", direction: IN)
   comments: [Comment!]! @relationship(type: "ON", direction: IN)
 }
@@ -174,7 +173,7 @@ type Comment {
   id: ID! @id
   title: String!
   date: Int!
-  session: Sessions @relationship(type: "ON", direction: OUT)
+  session: Session @relationship(type: "ON", direction: OUT)
   set: Set @relationship(type: "ON", direction: OUT)
   arrow: Arrow @relationship(type: "ON", direction: OUT)
   note: Note @relationship(type: "ON", direction: OUT)
