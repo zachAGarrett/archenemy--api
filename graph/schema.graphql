@@ -133,8 +133,14 @@ type Arrow {
   comments: [Comment!]! @relationship(type: "ON", direction: IN)
 }
 
-# type Location
-# type Event
+type Location {
+  id: ID! @id
+  name: String!
+  coordinate: Point!
+  notes: [Note!]! @relationship(type: "ON", direction: IN)
+  comments: [Comment!]! @relationship(type: "ON", direction: IN)
+  sessions: [Session!]! @relationship(type: "AT", direction: IN)
+}
 
 type Ruleset {
   id: ID! @id
@@ -155,6 +161,7 @@ type Session {
   ruleset: Ruleset @relationship(type: "USES", direction: OUT)
   notes: [Note!]! @relationship(type: "ON", direction: IN)
   comments: [Comment!]! @relationship(type: "ON", direction: IN)
+  location: Location @relationship(type: "AT", direction: OUT)
   active: Boolean! @default(value: false)
 }
 
