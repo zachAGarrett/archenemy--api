@@ -110,6 +110,7 @@ type Set {
   id: ID! @id
   number: Int!
   shootoff: Boolean! @default(value: false)
+  arrowsInOrder: Boolean! @default(value: false)
   arrows: [Arrow!]! @relationship(type: "DURING", direction: IN)
   session: Session! @relationship(type: "DURING", direction: OUT)
   archer: Archer! @relationship(type: "SHOOTS", direction: IN)
