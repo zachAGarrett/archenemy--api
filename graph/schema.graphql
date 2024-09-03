@@ -122,13 +122,12 @@ type Set {
 
 type Arrow {
   id: ID! @id
+  number: Int!
   angle: Float
   offset: Float
   coordinate: CartesianPoint
   value: Int
   set: Set! @relationship(type: "DURING", direction: OUT)
-  target: Target!
-    @relationship(type: "AT", direction: OUT, properties: "AtTarget")
   archer: Archer! @relationship(type: "SHOOTS", direction: IN)
   notes: [Note!]! @relationship(type: "ON", direction: IN)
   comments: [Comment!]! @relationship(type: "ON", direction: IN)
