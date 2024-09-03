@@ -51,7 +51,7 @@ type GenerationProperties @relationshipProperties {
 
 type User {
   id: ID! @id
-  authenicator: Authenicator!
+  authenticator: Authenticator!
     @relationship(
       type: "AUTHENTICATES"
       properties: "Authenticates"
@@ -63,7 +63,7 @@ type User {
   sets: [Set!]! @relationship(type: "SHOOTS", direction: OUT)
 }
 
-type Authenicator {
+type Authenticator {
   id: ID! @id
   name: String!
   users: [User!]!
